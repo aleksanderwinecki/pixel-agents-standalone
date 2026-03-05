@@ -229,6 +229,7 @@ function App() {
         onToggleEditMode={editor.handleToggleEditMode}
         isDebugMode={isDebugMode}
         onToggleDebugMode={handleToggleDebugMode}
+        workspaceFolders={[]}
       />
 
       {editor.isEditMode && editor.isDirty && (

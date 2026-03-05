@@ -10,6 +10,11 @@ import { setCharacterTemplates } from '../office/sprites/spriteData.js'
 import { vscode } from '../vscodeApi.js'
 import { playDoneSound, setSoundEnabled } from '../notificationSound.js'
 
+export interface WorkspaceFolder {
+  name: string
+  path: string
+}
+
 export interface SubagentCharacter {
   id: number
   parentAgentId: number
