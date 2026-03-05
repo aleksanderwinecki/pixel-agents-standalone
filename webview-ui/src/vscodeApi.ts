@@ -1,14 +1,8 @@
-interface VsCodeApi {
+interface MessageApi {
   postMessage(msg: unknown): void
 }
 
-function createApi(): VsCodeApi {
-  // VS Code webview mode
-  if (typeof window !== 'undefined' && 'acquireVsCodeApi' in window) {
-    return (window as unknown as { acquireVsCodeApi: () => VsCodeApi }).acquireVsCodeApi()
-  }
-
-  // Standalone WebSocket mode
+function createApi(): MessageApi {
   const pending: unknown[] = []
   let socket: WebSocket | null = null
   let connected = false

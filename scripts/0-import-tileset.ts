@@ -6,7 +6,7 @@
  *   npx ts-node scripts/import-tileset-cli.ts
  *
  * This script guides you through the complete process of extracting furniture assets
- * from a tileset PNG file and integrating them into the Pixel Agents extension.
+ * from a tileset PNG file and integrating them into Pixel Agents.
  */
 
 import * as fs from 'fs'
@@ -62,8 +62,8 @@ const stages: StageStatus[] = [
     script: 'scripts/5-export-assets.ts',
   },
   {
-    name: 'Stage 6: Extension Integration',
-    description: 'Assets bundled with extension and loaded at runtime',
+    name: 'Stage 6: Build Integration',
+    description: 'Assets bundled into dist/ and loaded by the server at runtime',
     completed: false,
   },
   {
@@ -291,26 +291,25 @@ async function runStage5() {
 }
 
 async function runStage6() {
-  console.log('\n📍 Stage 6: Extension Integration')
+  console.log('\n📍 Stage 6: Build Integration')
   console.log('─'.repeat(60))
-  console.log('Assets are automatically bundled with the extension and loaded at runtime')
+  console.log('Assets are automatically bundled and loaded by the server at runtime')
   console.log()
-  console.log('✅ Automatic! Just rebuild the extension:')
+  console.log('✅ Automatic! Just rebuild:')
   console.log('   npm run build')
   console.log()
-  console.log('📦 The extension now:')
-  console.log('   • Bundles assets/furniture/* in dist/')
-  console.log('   • Loads assets from dist/assets/ at runtime')
-  console.log('   • Works in any directory (no workspace dependency)')
+  console.log('📦 This will:')
+  console.log('   • Copy assets/furniture/* to dist/assets/')
+  console.log('   • Server loads assets from dist/assets/ at startup')
   console.log('   • Shows ONLY your custom assets (hides hardcoded furniture)')
   console.log()
 
-  const confirm = await question('Rebuild extension now? (y/n): ')
+  const confirm = await question('Rebuild now? (y/n): ')
   if (confirm.toLowerCase() === 'y') {
     try {
-      console.log('\n🔄 Building extension...')
+      console.log('\n🔄 Building...')
       execSync('npm run build', { stdio: 'inherit' })
-      console.log('\n✅ Stage 6 complete! Extension ready to use.')
+      console.log('\n✅ Stage 6 complete! Run `npm start` to use.')
       return true
     } catch (err) {
       console.log('\n❌ Build failed')
@@ -371,12 +370,12 @@ async function runPipeline() {
   console.log('   Stage 3: ✅ Metadata generated')
   console.log('   Stage 4: ✅ Metadata reviewed')
   console.log('   Stage 5: ✅ Assets exported to assets/furniture/')
-  console.log('   Stage 6: ✅ Extension bundled')
+  console.log('   Stage 6: ✅ Assets bundled')
   console.log()
   console.log('🚀 Next steps:')
-  console.log('   1. Press F5 in VS Code to test the extension')
+  console.log('   1. Run `npm start` to launch the server')
   console.log('   2. Your custom assets will be available in the editor')
-  console.log('   3. Click "Edit" → "Place" to see all your furniture')
+  console.log('   3. Click "Layout" → furniture tab to see all your furniture')
   console.log()
   console.log('To run another tileset, execute:')
   console.log('   npx ts-node scripts/import-tileset-cli.ts')

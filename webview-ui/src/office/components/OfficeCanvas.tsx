@@ -558,7 +558,7 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
           officeState.selectedAgentId = hitId
           officeState.cameraFollowId = hitId
         }
-        onClick(hitId) // still focus terminal
+        onClick(hitId)
         return
       }
 

@@ -9,47 +9,39 @@ This project is licensed under the [MIT License](LICENSE), so your contributions
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (LTS recommended)
-- [VS Code](https://code.visualstudio.com/) (v1.109.0 or later)
 
 ### Setup
 
 ```bash
-git clone https://github.com/pablodelucca/pixel-agents.git
+git clone <this-repo>
 cd pixel-agents
 npm install
-cd webview-ui && npm install && cd ..
 npm run build
+npm start
 ```
 
-Then press **F5** in VS Code to launch the Extension Development Host.
+The server starts at `http://localhost:3000` and opens your browser.
 
 ## Development Workflow
 
-For development with live rebuilds, run:
-
-```bash
-npm run watch
-```
-
-This starts parallel watchers for both the extension backend (esbuild) and TypeScript type-checking.
-
-> **Note:** The webview (Vite) is not included in `watch` — after changing webview code, run `npm run build:webview` or the full `npm run build`.
+After changing webview code, rebuild with `npm run build`. The server (`npm start`) runs via `tsx` so server changes take effect on restart — no build step needed.
 
 ### Project Structure
 
 | Directory | Description |
 |---|---|
-| `src/` | Extension backend — Node.js, VS Code API |
+| `server/` | Express + WebSocket server, hook handler, asset loading |
 | `webview-ui/` | React + TypeScript frontend (separate Vite project) |
 | `scripts/` | Asset extraction and generation tooling |
 | `assets/` | Bundled sprites, catalog, and default layout |
 
 ## Code Guidelines
+
 ### Constants
 
-**No unused locals or parameters** (`noUnusedLocals` and `noUnusedParameters` are enabled): All magic numbers and strings are centralized — don't add inline constants to source files:
+**No unused locals or parameters** (`noUnusedLocals` and `noUnusedParameters` are enabled). All magic numbers and strings are centralized — don't add inline constants to source files:
 
-- **Extension backend:** `src/constants.ts`
+- **Server:** top of `server/server.ts`
 - **Webview:** `webview-ui/src/constants.ts`
 - **CSS variables:** `webview-ui/src/index.css` `:root` block (`--pixel-*` properties)
 
@@ -70,24 +62,14 @@ The project uses a pixel art aesthetic. All overlays should use:
    ```bash
    npm run build
    ```
-   This runs type-checking, linting, esbuild (extension), and Vite (webview).
 4. Open a pull request against `main` with:
    - A clear description of what changed and why
    - How you tested the changes (steps to reproduce / verify)
    - **Screenshots or GIFs for any UI changes**
 
-## Reporting Bugs
+## Credits
 
-[Open an issue](https://github.com/pablodelucca/pixel-agents/issues) with:
-
-- What you expected to happen
-- What actually happened
-- Steps to reproduce
-- VS Code version and OS
-
-## Feature Requests
-
-Have an idea? [Open an issue](https://github.com/pablodelucca/pixel-agents/issues) to discuss it before building. This helps avoid duplicate work and ensures the feature fits the project's direction.
+Forked from [Pixel Agents](https://github.com/pablodelucca/pixel-agents) VS Code extension by [Pablo De Lucca](https://github.com/pablodelucca).
 
 ## Code of Conduct
 

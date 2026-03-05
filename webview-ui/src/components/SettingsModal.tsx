@@ -2,8 +2,6 @@ import { useState, useRef } from 'react'
 import { vscode } from '../vscodeApi.js'
 import { isSoundEnabled, setSoundEnabled } from '../notificationSound.js'
 
-const isStandalone = typeof window !== 'undefined' && !('acquireVsCodeApi' in window)
-
 interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
@@ -125,12 +123,7 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode 
         </button>
         <button
           onClick={() => {
-            if (isStandalone) {
-              fileInputRef.current?.click()
-            } else {
-              vscode.postMessage({ type: 'importLayout' })
-              onClose()
-            }
+            fileInputRef.current?.click()
           }}
           onMouseEnter={() => setHovered('import')}
           onMouseLeave={() => setHovered(null)}
@@ -141,8 +134,7 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode 
         >
           Import Layout
         </button>
-        {isStandalone && (
-          <input
+        <input
             ref={fileInputRef}
             type="file"
             accept=".json"
@@ -169,7 +161,6 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode 
               e.target.value = ''
             }}
           />
-        )}
         <button
           onClick={() => {
             const newVal = !isSoundEnabled()

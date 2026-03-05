@@ -1,4 +1,4 @@
-# Pixel Agents — Standalone
+# Pixel Agents
 
 A standalone web app that turns your Claude Code sessions into animated pixel art characters in a virtual office. Fork of [Pixel Agents](https://github.com/pablodelucca/pixel-agents) VS Code extension, adapted to run as a standalone server using Claude Code hooks.
 
@@ -8,7 +8,7 @@ Each Claude Code session you open spawns a character that walks around, sits at 
 
 ## How It Works
 
-Unlike the VS Code extension (which monitors JSONL transcript files), this standalone version uses **Claude Code hooks** — shell commands that Claude Code runs at key lifecycle events. Every tool use, prompt submission, and session transition is reported to the server in real time. No file watching, no process detection, no heuristics.
+Uses **Claude Code hooks** — shell commands that Claude Code runs at key lifecycle events. Every tool use, prompt submission, and session transition is reported to the server in real time. No file watching, no process detection, no heuristics.
 
 The hook events:
 - **SessionStart** — character spawns
@@ -36,8 +36,8 @@ The hook events:
 
 ```bash
 git clone <this-repo>
-cd pixel-agents-standalone
-npm install   # installs all dependencies (root + webview + server)
+cd pixel-agents
+npm install   # installs all dependencies (root + webview)
 npm run build # compiles the React frontend
 npm start     # starts the server
 ```
@@ -181,16 +181,6 @@ The app works without the tileset — you get default characters and a basic lay
 - **Server**: Node.js, Express, WebSocket, pngjs
 - **Frontend**: React 19, TypeScript, Vite, Canvas 2D
 - **Communication**: Claude Code hooks → curl → HTTP POST → WebSocket broadcast
-
-## Differences from VS Code Extension
-
-| | VS Code Extension | Standalone |
-|---|---|---|
-| Runtime | VS Code webview panel | Browser + Node.js server |
-| Agent detection | JSONL file watching + process detection | Claude Code hooks only |
-| Permission detection | Timer-based heuristic (7s delay) | Notification hook (instant) |
-| Terminal integration | VS Code terminals only | Any terminal emulator |
-| Agent creation | "+ Agent" button creates terminal | Run `claude` anywhere |
 
 ## Credits
 

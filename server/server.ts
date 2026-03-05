@@ -19,7 +19,7 @@ import { WebSocketServer, WebSocket } from 'ws'
 import { PNG } from 'pngjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const PROJECT_ROOT = path.resolve(__dirname, '..', '..')
+const PROJECT_ROOT = path.resolve(__dirname, '..')
 
 // ─── CLI Args ────────────────────────────────────────────────────
 
