@@ -37,13 +37,14 @@ The hook events:
 ```bash
 git clone <this-repo>
 cd pixel-agents-standalone
-npm install
-cd webview-ui && npm install && cd ..
-npm run build
-cd standalone && npm install && npm start
+npm install   # installs all dependencies (root + webview + server)
+npm run build # compiles the React frontend
+npm start     # starts the server
 ```
 
 The server starts at `http://localhost:3000` and opens your browser automatically.
+
+After the first build, you can restart with just `npm start`.
 
 ### 2. Configure Claude Code hooks
 
