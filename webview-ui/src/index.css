@@ -8,6 +8,7 @@
 
 :root {
   --pixel-bg: #1e1e2e;
+  --pixel-bg-translucent: rgba(30, 30, 46, 0.85);
   --pixel-border: #4a4a6a;
   --pixel-border-light: #6a6a8a;
   --pixel-accent: #5a8cff;

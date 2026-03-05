@@ -1,4 +1,4 @@
-import { TileType, FurnitureType, DEFAULT_COLS, DEFAULT_ROWS, TILE_SIZE, Direction } from '../types.js'
+import { TileType, FurnitureType, TILE_SIZE, Direction } from '../types.js'
 import type { TileType as TileTypeVal, OfficeLayout, PlacedFurniture, Seat, FurnitureInstance, FloorColor } from '../types.js'
 import { getCatalogEntry } from './furnitureCatalog.js'
 import { getColorizedSprite } from '../colorize.js'
@@ -204,13 +204,15 @@ export function getSeatTiles(seats: Map<string, Seat>): Set<string> {
   return tiles
 }
 
-/** Default floor colors for the two rooms */
-const DEFAULT_LEFT_ROOM_COLOR: FloorColor = { h: 35, s: 30, b: 15, c: 0 }  // warm beige
-const DEFAULT_RIGHT_ROOM_COLOR: FloorColor = { h: 25, s: 45, b: 5, c: 10 }  // warm brown
-const DEFAULT_CARPET_COLOR: FloorColor = { h: 280, s: 40, b: -5, c: 0 }     // purple
-const DEFAULT_DOORWAY_COLOR: FloorColor = { h: 35, s: 25, b: 10, c: 0 }     // tan
+/** Default floor colors */
+const ROOM_A_COLOR: FloorColor = { h: 35, s: 30, b: 15, c: 0 }    // warm beige
+const ROOM_B_COLOR: FloorColor = { h: 210, s: 20, b: 10, c: 0 }   // cool blue-grey
+const ROOM_C_COLOR: FloorColor = { h: 25, s: 45, b: 5, c: 10 }    // warm brown
+const ROOM_D_EDGE_COLOR: FloorColor = { h: 25, s: 30, b: 10, c: 0 } // warm neutral
+const ROOM_D_CARPET_COLOR: FloorColor = { h: 280, s: 40, b: -5, c: 0 } // purple carpet
+const DOORWAY_FL_COLOR: FloorColor = { h: 35, s: 25, b: 10, c: 0 } // tan
 
-/** Create the default office layout matching the current hardcoded office */
+/** Create the default office layout — 4 rooms with 20 seats */
 export function createDefaultLayout(): OfficeLayout {
   const W = TileType.WALL
   const F1 = TileType.FLOOR_1
@@ -218,53 +220,108 @@ export function createDefaultLayout(): OfficeLayout {
   const F3 = TileType.FLOOR_3
   const F4 = TileType.FLOOR_4
 
-  const tiles: TileTypeVal[] = []
-  const tileColors: Array<FloorColor | null> = []
+  const COLS = 28
+  const ROWS = 16
 
-  for (let r = 0; r < DEFAULT_ROWS; r++) {
-    for (let c = 0; c < DEFAULT_COLS; c++) {
-      if (r === 0 || r === DEFAULT_ROWS - 1) { tiles.push(W); tileColors.push(null); continue }
-      if (c === 0 || c === DEFAULT_COLS - 1) { tiles.push(W); tileColors.push(null); continue }
-      if (c === 10) {
-        if (r >= 4 && r <= 6) {
-          tiles.push(F4); tileColors.push(DEFAULT_DOORWAY_COLOR)
-        } else {
-          tiles.push(W); tileColors.push(null)
-        }
-        continue
-      }
-      if (c >= 15 && c <= 18 && r >= 7 && r <= 9) {
-        tiles.push(F3); tileColors.push(DEFAULT_CARPET_COLOR); continue
-      }
-      if (c < 10) {
-        tiles.push(F1); tileColors.push(DEFAULT_LEFT_ROOM_COLOR)
-      } else {
-        tiles.push(F2); tileColors.push(DEFAULT_RIGHT_ROOM_COLOR)
+  const tiles = new Array<TileTypeVal>(COLS * ROWS).fill(W)
+  const tileColors = new Array<FloorColor | null>(COLS * ROWS).fill(null)
+
+  function fill(c1: number, r1: number, c2: number, r2: number, tile: TileTypeVal, color: FloorColor) {
+    for (let r = r1; r <= r2; r++) {
+      for (let c = c1; c <= c2; c++) {
+        tiles[r * COLS + c] = tile
+        tileColors[r * COLS + c] = color
       }
     }
   }
+  function set(c: number, r: number, tile: TileTypeVal, color: FloorColor) {
+    tiles[r * COLS + c] = tile
+    tileColors[r * COLS + c] = color
+  }
+
+  // Room A — Main Office (top-left)
+  fill(1, 1, 13, 7, F1, ROOM_A_COLOR)
+  // Room B — Conference Room (top-right)
+  fill(15, 1, 26, 7, F2, ROOM_B_COLOR)
+  // Room C — Dev Lab (bottom-left)
+  fill(1, 9, 13, 14, F2, ROOM_C_COLOR)
+  // Room D — Lounge (bottom-right): neutral edges + carpet center
+  fill(15, 9, 26, 14, F1, ROOM_D_EDGE_COLOR)
+  fill(17, 10, 24, 13, F3, ROOM_D_CARPET_COLOR)
+
+  // Doorways — vertical wall at col 14
+  for (const r of [4, 5]) set(14, r, F4, DOORWAY_FL_COLOR)
+  for (const r of [11, 12]) set(14, r, F4, DOORWAY_FL_COLOR)
+  // Doorways — horizontal wall at row 8
+  for (const c of [5, 6]) set(c, 8, F4, DOORWAY_FL_COLOR)
+  for (const c of [21, 22]) set(c, 8, F4, DOORWAY_FL_COLOR)
 
   const furniture: PlacedFurniture[] = [
-    { uid: 'desk-left', type: FurnitureType.DESK, col: 4, row: 3 },
-    { uid: 'desk-right', type: FurnitureType.DESK, col: 13, row: 3 },
-    { uid: 'bookshelf-1', type: FurnitureType.BOOKSHELF, col: 1, row: 5 },
-    { uid: 'plant-left', type: FurnitureType.PLANT, col: 1, row: 1 },
-    { uid: 'cooler-1', type: FurnitureType.COOLER, col: 17, row: 7 },
-    { uid: 'plant-right', type: FurnitureType.PLANT, col: 18, row: 1 },
-    { uid: 'whiteboard-1', type: FurnitureType.WHITEBOARD, col: 15, row: 0 },
-    // Left desk chairs
-    { uid: 'chair-l-top', type: FurnitureType.CHAIR, col: 4, row: 2 },
-    { uid: 'chair-l-bottom', type: FurnitureType.CHAIR, col: 5, row: 5 },
-    { uid: 'chair-l-left', type: FurnitureType.CHAIR, col: 3, row: 4 },
-    { uid: 'chair-l-right', type: FurnitureType.CHAIR, col: 6, row: 3 },
-    // Right desk chairs
-    { uid: 'chair-r-top', type: FurnitureType.CHAIR, col: 13, row: 2 },
-    { uid: 'chair-r-bottom', type: FurnitureType.CHAIR, col: 14, row: 5 },
-    { uid: 'chair-r-left', type: FurnitureType.CHAIR, col: 12, row: 4 },
-    { uid: 'chair-r-right', type: FurnitureType.CHAIR, col: 15, row: 3 },
+    // ═══ Room A — Main Office (top-left) ═══
+    // Desk cluster 1
+    { uid: 'a-desk-1', type: FurnitureType.DESK, col: 2, row: 2 },
+    { uid: 'a-ch-1a', type: FurnitureType.CHAIR, col: 1, row: 3 },
+    { uid: 'a-ch-1b', type: FurnitureType.CHAIR, col: 4, row: 2 },
+    { uid: 'a-ch-1c', type: FurnitureType.CHAIR, col: 3, row: 4 },
+    // Desk cluster 2
+    { uid: 'a-desk-2', type: FurnitureType.DESK, col: 8, row: 2 },
+    { uid: 'a-ch-2a', type: FurnitureType.CHAIR, col: 7, row: 3 },
+    { uid: 'a-ch-2b', type: FurnitureType.CHAIR, col: 10, row: 2 },
+    { uid: 'a-ch-2c', type: FurnitureType.CHAIR, col: 9, row: 4 },
+    // Desk cluster 3
+    { uid: 'a-desk-3', type: FurnitureType.DESK, col: 5, row: 5 },
+    { uid: 'a-ch-3a', type: FurnitureType.CHAIR, col: 4, row: 6 },
+    { uid: 'a-ch-3b', type: FurnitureType.CHAIR, col: 7, row: 6 },
+    // Decor
+    { uid: 'a-plant-1', type: FurnitureType.PLANT, col: 1, row: 1 },
+    { uid: 'a-plant-2', type: FurnitureType.PLANT, col: 13, row: 1 },
+    { uid: 'a-shelf-1', type: FurnitureType.BOOKSHELF, col: 12, row: 2 },
+    { uid: 'a-lamp-1', type: FurnitureType.LAMP, col: 1, row: 7 },
+
+    // ═══ Room B — Conference Room (top-right) ═══
+    { uid: 'b-desk-1', type: FurnitureType.DESK, col: 19, row: 3 },
+    { uid: 'b-ch-1a', type: FurnitureType.CHAIR, col: 18, row: 3 },
+    { uid: 'b-ch-1b', type: FurnitureType.CHAIR, col: 21, row: 4 },
+    { uid: 'b-ch-1c', type: FurnitureType.CHAIR, col: 19, row: 2 },
+    { uid: 'b-ch-1d', type: FurnitureType.CHAIR, col: 20, row: 5 },
+    { uid: 'b-wb-1', type: FurnitureType.WHITEBOARD, col: 16, row: 1 },
+    { uid: 'b-wb-2', type: FurnitureType.WHITEBOARD, col: 23, row: 1 },
+    { uid: 'b-plant-1', type: FurnitureType.PLANT, col: 15, row: 1 },
+    { uid: 'b-plant-2', type: FurnitureType.PLANT, col: 26, row: 1 },
+    { uid: 'b-plant-3', type: FurnitureType.PLANT, col: 26, row: 7 },
+    { uid: 'b-lamp-1', type: FurnitureType.LAMP, col: 15, row: 7 },
+
+    // ═══ Room C — Dev Lab (bottom-left) ═══
+    // Desk cluster 4
+    { uid: 'c-desk-1', type: FurnitureType.DESK, col: 2, row: 10 },
+    { uid: 'c-ch-1a', type: FurnitureType.CHAIR, col: 1, row: 10 },
+    { uid: 'c-ch-1b', type: FurnitureType.CHAIR, col: 4, row: 11 },
+    { uid: 'c-ch-1c', type: FurnitureType.CHAIR, col: 3, row: 12 },
+    // Desk cluster 5
+    { uid: 'c-desk-2', type: FurnitureType.DESK, col: 8, row: 10 },
+    { uid: 'c-ch-2a', type: FurnitureType.CHAIR, col: 7, row: 10 },
+    { uid: 'c-ch-2b', type: FurnitureType.CHAIR, col: 10, row: 11 },
+    { uid: 'c-ch-2c', type: FurnitureType.CHAIR, col: 9, row: 12 },
+    // Decor
+    { uid: 'c-pc-1', type: FurnitureType.PC, col: 5, row: 9 },
+    { uid: 'c-pc-2', type: FurnitureType.PC, col: 11, row: 9 },
+    { uid: 'c-shelf-1', type: FurnitureType.BOOKSHELF, col: 12, row: 10 },
+    { uid: 'c-lamp-1', type: FurnitureType.LAMP, col: 1, row: 14 },
+    { uid: 'c-plant-1', type: FurnitureType.PLANT, col: 13, row: 9 },
+
+    // ═══ Room D — Lounge (bottom-right) ═══
+    { uid: 'd-desk-1', type: FurnitureType.DESK, col: 19, row: 11 },
+    { uid: 'd-ch-1a', type: FurnitureType.CHAIR, col: 18, row: 11 },
+    { uid: 'd-ch-1b', type: FurnitureType.CHAIR, col: 21, row: 12 },
+    { uid: 'd-ch-1c', type: FurnitureType.CHAIR, col: 20, row: 10 },
+    { uid: 'd-cooler', type: FurnitureType.COOLER, col: 26, row: 9 },
+    { uid: 'd-plant-1', type: FurnitureType.PLANT, col: 15, row: 9 },
+    { uid: 'd-plant-2', type: FurnitureType.PLANT, col: 26, row: 14 },
+    { uid: 'd-plant-3', type: FurnitureType.PLANT, col: 15, row: 14 },
+    { uid: 'd-lamp-1', type: FurnitureType.LAMP, col: 16, row: 12 },
   ]
 
-  return { version: 1, cols: DEFAULT_COLS, rows: DEFAULT_ROWS, tiles, tileColors, furniture }
+  return { version: 1, cols: COLS, rows: ROWS, tiles, tileColors, furniture }
 }
 
 /** Serialize layout to JSON string */
@@ -309,16 +366,16 @@ function migrateLayout(layout: OfficeLayout): OfficeLayout {
         tileColors.push(null)
         break
       case 1: // was TILE_FLOOR → FLOOR_1 beige
-        tileColors.push(DEFAULT_LEFT_ROOM_COLOR)
+        tileColors.push(ROOM_A_COLOR)
         break
       case 2: // was WOOD_FLOOR → FLOOR_2 brown
-        tileColors.push(DEFAULT_RIGHT_ROOM_COLOR)
+        tileColors.push(ROOM_C_COLOR)
         break
       case 3: // was CARPET → FLOOR_3 purple
-        tileColors.push(DEFAULT_CARPET_COLOR)
+        tileColors.push(ROOM_D_CARPET_COLOR)
         break
       case 4: // was DOORWAY → FLOOR_4 tan
-        tileColors.push(DEFAULT_DOORWAY_COLOR)
+        tileColors.push(DOORWAY_FL_COLOR)
         break
       default:
         // New tile types (5-7) without colors — use neutral gray

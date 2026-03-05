@@ -671,6 +671,7 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
         position: 'relative',
         overflow: 'hidden',
         background: '#1E1E2E',
+        zIndex: 0,
       }}
     >
       <canvas

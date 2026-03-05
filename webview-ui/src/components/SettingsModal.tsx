@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { vscode } from '../vscodeApi.js'
 import { isSoundEnabled, setSoundEnabled } from '../notificationSound.js'
+
+const isStandalone = typeof window !== 'undefined' && !('acquireVsCodeApi' in window)
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -27,6 +29,7 @@ const menuItemBase: React.CSSProperties = {
 export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode }: SettingsModalProps) {
   const [hovered, setHovered] = useState<string | null>(null)
   const [soundLocal, setSoundLocal] = useState(isSoundEnabled)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   if (!isOpen) return null
 
@@ -122,8 +125,12 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode 
         </button>
         <button
           onClick={() => {
-            vscode.postMessage({ type: 'importLayout' })
-            onClose()
+            if (isStandalone) {
+              fileInputRef.current?.click()
+            } else {
+              vscode.postMessage({ type: 'importLayout' })
+              onClose()
+            }
           }}
           onMouseEnter={() => setHovered('import')}
           onMouseLeave={() => setHovered(null)}
@@ -134,6 +141,35 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode 
         >
           Import Layout
         </button>
+        {isStandalone && (
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              const reader = new FileReader()
+              reader.onload = () => {
+                try {
+                  const imported = JSON.parse(reader.result as string)
+                  if (imported.version !== 1 || !Array.isArray(imported.tiles)) {
+                    console.error('Invalid layout file')
+                    return
+                  }
+                  vscode.postMessage({ type: 'saveLayout', layout: imported })
+                  window.dispatchEvent(new MessageEvent('message', { data: { type: 'layoutLoaded', layout: imported } }))
+                  onClose()
+                } catch {
+                  console.error('Failed to parse layout file')
+                }
+              }
+              reader.readAsText(file)
+              e.target.value = ''
+            }}
+          />
+        )}
         <button
           onClick={() => {
             const newVal = !isSoundEnabled()

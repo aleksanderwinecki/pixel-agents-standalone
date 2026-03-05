@@ -30,15 +30,37 @@ function getActivityText(
       if (activeTool.permissionWait) return 'Needs approval'
       return activeTool.status
     }
-    // All tools done but agent still active (mid-turn) — keep showing last tool status
-    if (isActive) {
-      const lastTool = tools[tools.length - 1]
-      if (lastTool) return lastTool.status
-    }
+    // All tools done but agent still active (mid-turn) — thinking between tools
   }
 
-  return 'Idle'
+  return isActive ? 'Working...' : 'Idle'
 }
+
+/** CSS injected once for hover z-ordering */
+const LABEL_STYLES = `
+  .tool-label {
+    z-index: 100;
+    pointer-events: auto;
+    cursor: default;
+  }
+  .tool-label:hover {
+    z-index: 200 !important;
+  }
+  .tool-label:hover .tool-label-inner {
+    background: var(--pixel-bg) !important;
+    box-shadow: var(--pixel-shadow) !important;
+    padding: 3px 8px !important;
+  }
+  .tool-label:hover .tool-label-inner > span:last-of-type {
+    font-size: 22px !important;
+  }
+  .tool-label-priority {
+    z-index: 150;
+  }
+  .tool-label-priority:hover {
+    z-index: 200 !important;
+  }
+`
 
 export function ToolOverlay({
   officeState,
@@ -81,6 +103,7 @@ export function ToolOverlay({
 
   return (
     <>
+      <style>{LABEL_STYLES}</style>
       {allIds.map((id) => {
         const ch = officeState.characters.get(id)
         if (!ch) return null
@@ -88,14 +111,6 @@ export function ToolOverlay({
         const isSelected = selectedId === id
         const isHovered = hoveredId === id
         const isSub = ch.isSubagent
-
-        // Only show for hovered or selected agents
-        if (!isSelected && !isHovered) return null
-
-        // Position above character
-        const sittingOffset = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0
-        const screenX = (deviceOffsetX + ch.x * zoom) / dpr
-        const screenY = (deviceOffsetY + (ch.y + sittingOffset - TOOL_OVERLAY_VERTICAL_OFFSET) * zoom) / dpr
 
         // Get activity text
         const subHasPermission = isSub && ch.bubbleType === 'permission'
@@ -111,22 +126,39 @@ export function ToolOverlay({
           activityText = getActivityText(id, agentTools, ch.isActive)
         }
 
-        // Determine dot color
+        // Determine dot color and activity state
         const tools = agentTools[id]
         const hasPermission = subHasPermission || tools?.some((t) => t.permissionWait && !t.done)
         const hasActiveTools = tools?.some((t) => !t.done)
         const isActive = ch.isActive
+        const isIdle = !isActive && !hasPermission
 
         let dotColor: string | null = null
         if (hasPermission) {
           dotColor = 'var(--pixel-status-permission)'
         } else if (isActive && hasActiveTools) {
           dotColor = 'var(--pixel-status-active)'
+        } else if (isActive) {
+          dotColor = 'var(--pixel-status-active)'
         }
+
+        // Always show for active/permission agents; idle only on hover/select
+        if (isIdle && !isSelected && !isHovered) return null
+
+        // Position above character
+        const sittingOffset = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0
+        const screenX = (deviceOffsetX + ch.x * zoom) / dpr
+        const screenY = (deviceOffsetY + (ch.y + sittingOffset - TOOL_OVERLAY_VERTICAL_OFFSET) * zoom) / dpr
+
+        // Compact style for non-interacted active agents
+        // CSS :hover overrides compact styles via .tool-label:hover rules
+        const isCompact = !isSelected && !isHovered && !hasPermission
+        const isPriority = isSelected || hasPermission
 
         return (
           <div
             key={id}
+            className={`tool-label${isPriority ? ' tool-label-priority' : ''}`}
             style={{
               position: 'absolute',
               left: screenX,
@@ -135,22 +167,23 @@ export function ToolOverlay({
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              pointerEvents: isSelected ? 'auto' : 'none',
-              zIndex: isSelected ? 'var(--pixel-overlay-selected-z)' : 'var(--pixel-overlay-z)',
             }}
           >
             <div
+              className="tool-label-inner"
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5,
-                background: 'var(--pixel-bg)',
+                gap: isCompact ? 4 : 5,
+                background: isCompact ? 'var(--pixel-bg-translucent, rgba(30,30,46,0.85))' : 'var(--pixel-bg)',
                 border: isSelected
                   ? '2px solid var(--pixel-border-light)'
-                  : '2px solid var(--pixel-border)',
+                  : hasPermission
+                    ? '2px solid var(--pixel-status-permission)'
+                    : '2px solid var(--pixel-border)',
                 borderRadius: 0,
-                padding: isSelected ? '3px 6px 3px 8px' : '3px 8px',
-                boxShadow: 'var(--pixel-shadow)',
+                padding: isSelected ? '3px 6px 3px 8px' : isCompact ? '2px 6px' : '3px 8px',
+                boxShadow: isCompact ? 'none' : 'var(--pixel-shadow)',
                 whiteSpace: 'nowrap',
                 maxWidth: 220,
               }}
@@ -167,33 +200,17 @@ export function ToolOverlay({
                   }}
                 />
               )}
-              <div style={{ overflow: 'hidden' }}>
-                <span
-                  style={{
-                    fontSize: isSub ? '20px' : '22px',
-                    fontStyle: isSub ? 'italic' : undefined,
-                    color: 'var(--vscode-foreground)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: 'block',
-                  }}
-                >
-                  {activityText}
-                </span>
-                {ch.folderName && (
-                  <span
-                    style={{
-                      fontSize: '16px',
-                      color: 'var(--pixel-text-dim)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: 'block',
-                    }}
-                  >
-                    {ch.folderName}
-                  </span>
-                )}
-              </div>
+              <span
+                style={{
+                  fontSize: isSub ? '20px' : isCompact ? '18px' : '22px',
+                  fontStyle: isSub ? 'italic' : undefined,
+                  color: 'var(--pixel-text)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {activityText}
+              </span>
               {isSelected && !isSub && (
                 <button
                   onClick={(e) => {

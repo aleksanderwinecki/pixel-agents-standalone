@@ -1,0 +1,23 @@
+{
+  "name": "pixel-agents-standalone",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "build:webview": "cd ../webview-ui && npm run build",
+    "copy:assets": "node -e \"const fs=require('fs'),p=require('path');const s=p.join(__dirname,'..','webview-ui','public','assets'),d=p.join(__dirname,'..','dist','assets');if(fs.existsSync(s)){if(fs.existsSync(d))fs.rmSync(d,{recursive:true});fs.cpSync(s,d,{recursive:true});console.log('Assets copied to dist/assets/')}\"",
+    "build": "npm run build:webview && npm run copy:assets"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pngjs": "^7.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/pngjs": "^6.0.5",
+    "@types/ws": "^8.18.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
