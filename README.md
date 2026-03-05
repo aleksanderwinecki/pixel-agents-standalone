@@ -1,6 +1,6 @@
 # Pixel Agents
 
-A standalone web app that turns your Claude Code sessions into animated pixel art characters in a virtual office. Fork of [Pixel Agents](https://github.com/pablodelucca/pixel-agents) VS Code extension, adapted to run as a standalone server using Claude Code hooks.
+A web app that turns your Claude Code sessions into animated pixel art characters in a virtual office. Uses Claude Code hooks for real-time agent tracking — works with any terminal.
 
 Each Claude Code session you open spawns a character that walks around, sits at desks, and visually reflects what the agent is doing — typing when writing code, reading when searching files, waiting when it needs your attention.
 
@@ -35,8 +35,7 @@ The hook events:
 ### 1. Build and start the server
 
 ```bash
-git clone <this-repo>
-cd pixel-agents
+git clone <this-repo> && cd pixel-agents-standalone
 npm install   # installs all dependencies (root + webview)
 npm run build # compiles the React frontend
 npm start     # starts the server
