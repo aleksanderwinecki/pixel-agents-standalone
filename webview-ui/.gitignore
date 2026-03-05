@@ -23,8 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Privately licensed files
+# Asset files (relaxed for standalone fork)
 */assets/*
 !*/assets/characters/
 !*/assets/default-layout.json
 !*/assets/walls.png
+!*/assets/floors.png
+!*/assets/furniture/
